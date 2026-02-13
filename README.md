@@ -5,6 +5,7 @@
 ## 功能
 
 - 生成 Conventional Commits 提交信息（中文为主）
+- 默认先读取当前仓库的 `git diff`（优先已暂存变更）再给出候选标题并请求确认
 - 支持可选 icon（emoji）+ type 对应关系
 - 约束规则：`subject` 动词开头、≤20 字、不带句号；`scope` 优先中文
 - 信息不足时最多提问 1–3 个关键问题
@@ -25,7 +26,9 @@ git clone https://github.com/Suposing/git-commit-message-skill.git `
 
 ## 使用
 
-在 Codex 对话中直接说：
+在 Git 仓库目录下，Codex 会优先自动读取 `git diff` 来生成候选提交标题并让你确认。你也可以在对话里补充一句结果描述来加速。
+
+在 Codex 对话中直接说（推荐）：
 
 - `给我 commit message：我修复了登录页按钮重复点击导致重复请求的问题`
 
@@ -43,4 +46,3 @@ git-commit-message/
 └─ agents/
    └─ openai.yaml
 ```
-
