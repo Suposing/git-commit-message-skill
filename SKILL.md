@@ -1,6 +1,6 @@
 ---
 name: git-commit-message
-description: 生成符合 Conventional Commits 的 git commit 提交信息（中文为主），包含 type/scope/subject/body/footer、可选 icon；适配团队规则：subject 动词开头且不超过 20 字、不要句号，scope 优先中文。用于用户请求“给我 commit message/提交信息/提交说明/Conventional Commits 文案/提交标题怎么写”等场景；仅输出提交信息文本，不执行 git commit、不改代码。
+description: 生成符合 Conventional Commits 的 git commit 提交信息（中文为主），包含 type/scope/subject/body/footer、可选 icon；适配团队规则：subject 动词开头且不超过 20 字、不要句号，scope 优先中文。默认先自动读取当前仓库的 git diff（优先已暂存变更）再给出候选标题并请求确认，确认后仅输出可直接粘贴的提交信息文本；不执行 git commit、不改代码。
 ---
 
 # Git Commit Message 生成规范
@@ -9,7 +9,30 @@ description: 生成符合 Conventional Commits 的 git commit 提交信息（中
 
 - 只产出可直接粘贴到 Git 提交框的一段文本（必要时多行）。
 - 默认遵循 Conventional Commits，并按团队约定输出中文文案。
-- 仅输出提交信息文本：不输出解释说明、不输出多余内容、不使用代码块围栏包裹最终输出。
+- 默认先自动读取 git diff（优先 `--staged`）再生成候选并确认；用户确认后再输出最终提交信息文本。
+- 最终输出仅包含提交信息文本：不输出解释说明、不输出多余内容、不使用代码块围栏包裹最终输出。
+
+## 默认工作流（先自动看 git diff，再生成/再确认）
+
+1) 自动读取当前目录的 git 变更（只读命令，不执行 `git add/commit/push`）：
+   - 确认在 Git 仓库内：`git rev-parse --is-inside-work-tree`
+   - 查看变更文件：`git status --porcelain=v1 -uall`
+   - 优先读取已暂存变更：`git diff --staged`
+   - 若无暂存变更，再读取未暂存变更：`git diff`
+
+2) 基于 diff 推断本次提交的：
+   - 推荐 `type`（feat/fix/chore…）
+   - 建议 `scope`（优先中文模块名）
+   - 1 个核心 `subject`（动词开头，≤20 字，不带句号）
+   - 若多项改动：建议 body 的分行要点（不把多件事塞进 subject）
+
+3) 先“确认”，后“最终输出”：
+   - 第一步：给出 1–2 个候选标题（不要输出完整可复制的提交信息），并问用户选哪一个或怎么改。
+   - 第二步：用户确认后，再输出最终提交信息文本（严格按下方格式与空行规则），且不要附带任何额外话术。
+
+4) 异常/边界：
+   - 不在 Git 仓库或无法读取 diff：退回到“信息不足时的提问策略”。
+   - 只有未跟踪文件（untracked）且无 diff：根据 `git status` 的文件名推断，必要时提问确认 `type/scope/结果`。
 
 ## 输出格式（必须）
 
@@ -88,12 +111,12 @@ description: 生成符合 Conventional Commits 的 git commit 提交信息（中
 
 ## 信息不足时的提问策略
 
-当用户未提供足够信息时，最多提问 1–3 个问题，优先顺序：
+当无法从 git diff 得到足够信息，或候选标题无法唯一确定时，最多提问 1–3 个问题，优先顺序：
 1) 本次提交属于哪个 type（feat/fix/chore…）？
 2) scope 是什么模块（中文名，不确定可不填）？
 3) 想强调的结果是什么（动词开头，≤20 字）？
 
-用户仅说“给我 commit message/提交信息”，必须先提问，不得自行猜测。
+用户仅说“给我 commit message/提交信息”，优先先自动读取 git diff；读取不到再提问，不得自行猜测。
 
 ## 示例（仅用于说明；最终输出不要用代码块围栏包裹）
 
